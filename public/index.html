@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnswerCompare</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="/config.js"></script>
+  <script defer src="/main.js"></script>
+  <script>
+    document.write(`<script defer src="/main.js?ts=${Date.now()}"><\/script>`);
+  </script>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900">
+  <header class="sticky top-0 z-10 backdrop-blur bg-white/70 border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="h-8 w-8 rounded bg-indigo-600"></div>
+        <h1 class="text-xl font-semibold tracking-tight">AnswerCompare</h1>
+      </div>
+      <div id="header-user" class="hidden items-center gap-2">
+        <span class="text-sm text-slate-600">Signed in as</span>
+        <span id="user-name" class="px-2 py-1 text-sm rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200"></span>
+        <button id="refresh-btn" class="px-3 py-1.5 rounded-md bg-slate-900 text-white hover:bg-slate-800 text-sm">Refresh</button>
+        <button id="clear-btn" class="px-3 py-1.5 rounded-md bg-amber-600 text-white hover:bg-amber-500 text-sm">Clear all</button>
+        <button id="logout-btn" class="px-3 py-1.5 rounded-md bg-slate-200 text-slate-900 hover:bg-slate-300 text-sm">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-6">
+    <div id="loading" class="hidden fixed inset-0 z-50 bg-white/60 backdrop-blur-sm flex items-center justify-center">
+      <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-slate-200 shadow">
+        <svg class="animate-spin h-5 w-5 text-indigo-600" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+        </svg>
+        <span class="text-sm text-slate-700">Processing with GPT…</span>
+      </div>
+    </div>
+    <section id="login-section" class="mb-6">
+      <div class="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-medium mb-2">Login</h2>
+        <p class="text-sm text-slate-600 mb-4">Use a unique display name (e.g., Bruce, Lilian, Gary).</p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <input id="name-input" type="text" placeholder="Enter your name"
+                 class="flex-1 rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-200" />
+          <button id="login-btn" class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500">Login</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="app-section" class="hidden mb-6">
+      <div class="bg-white shadow-sm rounded-xl border border-slate-200 p-6">
+        <h2 class="text-lg font-medium mb-4">Upload Screenshots</h2>
+
+        <div id="drop-zone" class="rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 transition p-6 text-center cursor-pointer">
+          <div class="flex flex-col items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-10 h-10 text-slate-400">
+              <path fill-rule="evenodd" d="M1.5 6A2.25 2.25 0 013.75 3.75h4.5a2.25 2.25 0 012.25 2.25v.75h3.75a2.25 2.25 0 012.25 2.25v.75H21a2.25 2.25 0 012.25 2.25v4.5A2.25 2.25 0 0121 21H3a2.25 2.25 0 01-2.25-2.25V6z" clip-rule="evenodd" />
+            </svg>
+            <p class="text-slate-700 font-medium">Drag & drop or paste screenshots here</p>
+            <p class="text-slate-500 text-sm">Cmd/Ctrl+V to paste. Or</p>
+            <label class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800">
+              <input id="file-input" type="file" class="hidden" accept="image/*" multiple />
+              Browse files
+            </label>
+          </div>
+        </div>
+
+        <div id="preview-wrap" class="mt-4 hidden">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-sm font-medium text-slate-600">Queued screenshots</h3>
+            <button id="clear-queue" class="text-sm text-slate-600 hover:text-slate-900">Clear</button>
+          </div>
+          <div id="preview-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"></div>
+        </div>
+
+        <form id="upload-form" class="mt-4">
+          <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500">Upload & Extract</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="groups-section" class="hidden">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg font-medium">Grouped Questions</h2>
+      </div>
+
+      <div class="space-y-6">
+        <div>
+          <h3 class="text-sm font-semibold text-rose-700 mb-2">Answers differ</h3>
+          <div id="groups-conflicts" class="grid gap-4 md:grid-cols-2"></div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-semibold text-indigo-700 mb-2">Only you answered</h3>
+          <div id="groups-only-me" class="grid gap-4 md:grid-cols-2"></div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-semibold text-amber-700 mb-2">Missing your answer</h3>
+          <div id="groups-missing-me" class="grid gap-4 md:grid-cols-2"></div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-semibold text-slate-700 mb-2">Agreed answers</h3>
+          <div id="groups-normal" class="grid gap-4 md:grid-cols-2"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+
